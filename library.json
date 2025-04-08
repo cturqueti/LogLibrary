@@ -25,8 +25,8 @@
   },
   "homepage": "https://github.com/cturqueti/LogLibrary",
   "examples": [
-    "examples/BasicLog/main.cpp",
-    "examples/ColoredLogs/main.cpp",
-    "examples/CustomOutput/main.cpp"
-  ]  
+    "examples/BasicLog",
+    "examples/ColoredLogs",
+    "examples/CustomOutput"
+  ]
 }
