@@ -1,6 +1,15 @@
 {
   "name": "LogLibrary",
   "version": "1.0.0",
+  "description": "Biblioteca de logging com níveis de log e suporte a cores ANSI",
+  "keywords": ["log", "debug", "serial", "arduino"],
+  "authors": [
+    {
+      "name": "Carlos Augusto D'Orazio Turqueti",
+      "email": "carlosturqueti@gmail.com",
+      "url":"https://github.com/cturqueti"
+    }
+  ],
   "frameworks": "arduino",
   "platforms": [
     "atmelavr",  
@@ -10,16 +19,14 @@
     "ststm32"  
   ],
   "dependencies": {},
-  "authors": [
-    {
-      "name": "Carlos Augusto D'Orazio Turqueti",
-      "email": "carlosturqueti@gmail.com"
-    }
-  ],
-  "description": "A lightweight logging library for Arduino platforms",
   "repository": {
     "type": "git",
     "url": "https://github.com/cturqueti/LogLibrary.git"
   },
-  "homepage": "https://github.com/cturqueti/LogLibrary"
+  "homepage": "https://github.com/cturqueti/LogLibrary",
+  "examples": [
+    "examples/BasicLog/main.cpp",
+    "examples/ColoredLogs/main.cpp",
+    "examples/CustomOutput/main.cpp"
+  ]  
 }
