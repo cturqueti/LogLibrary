@@ -1,5 +1,12 @@
-# log
-📋 Recursos:  
+# LogLibrary  
+## A Custom Log Library for (AVR, ESP32, ESP8266, ARM) based microcontrollers
+
+<!-- ![PlatformIO](https://img.shields.io/badge/PlatformIO-Compatible-brightgreen)   -->
+![PlatformIO](https://img.shields.io/badge/PlatformIO-Compatible-orange?style=plastic)  
+![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache%202.0-blue.svg)  
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-green.svg)  
+
+## 📋 Recursos:  
 ✅ Múltiplos níveis de log (DEBUG, INFO, WARN, ERROR)
 
 🌈 Cores ANSI opcionais para melhor legibilidade
@@ -12,22 +19,22 @@
 
 📚 Buffer configurável para mensagens
 
-📦 Instalação:  
-Via PlatformIO (recomendado)
+## 📦 Instalação:  
+### Via PlatformIO (recomendado)
 Adicione no seu platformio.ini:
 
 ```ini
 lib_deps = 
     https://github.com/cturqueti/LogLibrary.git
 ```
-Via Arduino IDE:  
+### Via Arduino IDE:  
 Baixe o último release
 
 Extraia para ~/Arduino/libraries/LogLibrary
 
 Reinicie a Arduino IDE
 
-🚀 Uso Básico:
+## 🚀 Uso Básico:
 ```cpp
 #include <LogLibrary.h>
 
@@ -45,27 +52,27 @@ void loop() {
     delay(1000);
 }
 ```
-⚙️ Configuração:
-Níveis de Log
+## ⚙️ Configuração:
+### Níveis de Log
 ```cpp
 Log.setLogLevel(LogLevel::DEBUG);  // Mostra todos os logs
 // LogLevel::INFO, LogLevel::WARN, LogLevel::ERROR, LogLevel::NONE
 ```
-Saída Customizada
+### Saída Customizada
 ```cpp
 Serial2.begin(115200);
 Log.begin(&Serial2);  // Usa Serial2 como saída
 ```
-Cores ANSI
+### Cores ANSI
 ```cpp
 Log.enableColors(true);  // Ativa cores (padrão)
 // Log.enableColors(false);  // Desativa cores
 ```
-Tamanho do Buffer
+### Tamanho do Buffer
 ```cpp
 Log.begin(&Serial, 512);  // Buffer de 512 bytes
 ```
-📝 Exemplo Completo:
+## 📝 Exemplo Completo:
 ```cpp
 #include <LogLibrary.h>
 
@@ -90,13 +97,13 @@ void loop() {
 }
 ```
 
-📊 Saída Exemplo:  
+## 📊 Saída Exemplo:  
 [DEBUG][1250] Este é um debug  
 [INFO][1251] Informação importante  
 [WARN][1252] Atenção: temperatura alta  
 [ERROR][1253] ERRO: Sensor não respondendo  
 
-🌍 Compatibilidade:  
+## 🌍 Compatibilidade:  
 Plataforma	Testado em
 ATmega328	Arduino Uno, Nano
 ATmega2560	Arduino Mega
@@ -106,7 +113,7 @@ STM32	Blue Pill
 SAM	Arduino Due
 
 
-🤝 Contribuição:  
+## 🤝 Contribuição:  
 Contribuições são bem-vindas! Por favor:
 
 Faça um fork do projeto
@@ -119,9 +126,24 @@ Push para a branch (git push origin feature/nova-funcionalidade)
 
 Abra um Pull Request
 
-📄 Licença:  
-MIT License - Veja LICENSE para detalhes
+## 📜 Licença
+Copyright 2025 cturqueti
 
-Feito com ❤️ por Carlos A. D. Turqueti
+Licenciado sob a Apache License, Versão 2.0 (a "Licença");
+você não pode usar este arquivo exceto em conformidade com a Licença.
+Você pode obter uma cópia da Licença em:
 
+http://www.apache.org/licenses/LICENSE-2.0
+
+A menos que exigido por lei aplicável ou acordado por escrito, o software
+distribuído sob a Licença é distribuído "COMO ESTÁ",
+SEM GARANTIAS OU CONDIÇÕES DE QUALQUER TIPO, expressas ou implícitas.
+Consulte a Licença para o idioma específico que rege as permissões e
+limitações sob a Licença.
+
+Consulte o arquivo [LICENSE](LICENSE) para o texto completo da licença e
+[NOTICE](NOTICE) para informações sobre atribuições e histórico de modificações.
+
+
+## 📝 Dicas:
 🔧 Dica profissional: Use LOG_DEBUG apenas durante desenvolvimento e mude para LogLevel::INFO em produção para melhor performance!
