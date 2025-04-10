@@ -2,7 +2,7 @@
 ## A Custom Log Library for (AVR, ESP32, ESP8266, ARM) based microcontrollers
 
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Compatible-orange?style=plastic&logo=platformio)  
-![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache%202.0-blue.svg?style=plastic)  
+![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache%202.0-blue.svg?style=plastic&logo=apache)  
 ![Versão](https://img.shields.io/badge/Vers%C3%A3o-1.0.0-green.svg?style=plastic&logo=github)  
 
 ## 📋 Recursos:  
