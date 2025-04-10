@@ -1,10 +1,9 @@
 # LogLibrary  
 ## A Custom Log Library for (AVR, ESP32, ESP8266, ARM) based microcontrollers
 
-<!-- ![PlatformIO](https://img.shields.io/badge/PlatformIO-Compatible-brightgreen)   -->
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Compatible-orange?style=plastic)  
-![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache%202.0-blue.svg)  
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-green.svg)  
+![Licença](https://img.shields.io/badge/Licen%C3%A7a-Apache%202.0-blue.svg?style=plastic)  
+![Versão](https://img.shields.io/badge/Vers%C3%A3o-1.0.0-green.svg?style=plastic)  
 
 ## 📋 Recursos:  
 ✅ Múltiplos níveis de log (DEBUG, INFO, WARN, ERROR)
