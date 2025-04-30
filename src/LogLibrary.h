@@ -78,12 +78,24 @@ enum class LogFormat : uint8_t
     JSON
 };
 
+struct Timeval
+{
+    const char *time_zone;
+    const char *ntp_server1;
+    const char *ntp_server2;
+    const char *ntp_server3;
+};
+
 class Log
 {
 public:
     static Preferences _prefs;
 
     static void begin(Print *output = &Serial, uint16_t bufferSize = 256);
+    static void setTimeval(const char *timezone,
+                           const char *ntpServer1,
+                           const char *ntpServer2 = nullptr,
+                           const char *ntpServer3 = nullptr);
     static void setLogLevel(LogLevel level);
     static void setFormat(LogFormat format);
     static void enableColors(bool enable);
@@ -101,10 +113,7 @@ public:
                     int line,
                     const char *format, ...);
 
-    static bool syncTime(const char *timezone = "UTC",
-                         const char *ntpServer1 = "pool.ntp.org",
-                         const char *ntpServer2 = nullptr,
-                         const char *ntpServer3 = nullptr);
+    static bool syncTime();
 
 private:
     static Print *_output;
@@ -119,6 +128,7 @@ private:
     static bool _showDetails;
     static bool _jsonEscapeEnabled;
     static bool _timeSynced;
+    static Timeval _timeval;
 
     static const char *getColorCode(LogLevel level);
     static const char *getResetCode();

@@ -13,6 +13,11 @@ bool Log::_showDetails = false;
 bool Log::_jsonEscapeEnabled = false;
 bool Log::_timeSynced = false;
 Preferences Log::_prefs;
+Timeval Log::_timeval = {
+    .time_zone = "America/Sao_Paulo",
+    .ntp_server1 = "pool.ntp.org",
+    .ntp_server2 = "a.st1.ntp.br",
+    .ntp_server3 = "ntp.cais.rnp.br"};
 
 void Log::begin(Print *output, uint16_t bufferSize)
 {
@@ -28,8 +33,19 @@ void Log::begin(Print *output, uint16_t bufferSize)
 // Configura o timestamp (ESP32)
 #ifdef ESP32
     restoreTimeFromPrefs();
-    configTime(0, 0, "pool.ntp.org"); // Configura NTP (opcional)
+    startNTPAsinc();
 #endif
+}
+
+void Log::setTimeval(const char *timezone,
+                     const char *ntpServer1,
+                     const char *ntpServer2,
+                     const char *ntpServer3)
+{
+    _timeval.time_zone = timezone;
+    _timeval.ntp_server1 = ntpServer1;
+    _timeval.ntp_server2 = ntpServer2;
+    _timeval.ntp_server3 = ntpServer3;
 }
 
 const char *Log::getColorCode(LogLevel level)
@@ -233,12 +249,18 @@ void Log::log(LogLevel level,
     }
 }
 
-bool Log::syncTime(const char *timezone,
-                   const char *ntpServer1, const char *ntpServer2,
-                   const char *ntpServer3)
+bool Log::syncTime()
 {
-    configTzTime(timezone, ntpServer1, ntpServer2, ntpServer3);
+    if (!_timeval.time_zone || !_timeval.ntp_server1)
+    {
+        LOG_ERROR("Timezone ou NTP server não configurado");
+        return false;
+    }
 
+    configTzTime(_timeval.time_zone,
+                 _timeval.ntp_server1,
+                 _timeval.ntp_server2,
+                 _timeval.ntp_server3);
     // Espera pela sincronização (máximo 10 tentativas)
     int retry = 0;
     struct tm timeinfo;
@@ -286,7 +308,7 @@ void timeSyncTask(void *param)
     {
         if (WiFi.status() == WL_CONNECTED)
         {
-            Log::syncTime("UTC-3", "pool.ntp.org", "time.nist.gov", "time.google.com");
+            Log::syncTime();
         }
         vTaskDelay(delayTime);
     }
