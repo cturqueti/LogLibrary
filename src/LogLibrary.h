@@ -114,6 +114,7 @@ public:
                     const char *format, ...);
 
     static bool syncTime();
+    static bool syncTimeWithFallback();
 
 private:
     static Print *_output;
@@ -129,6 +130,7 @@ private:
     static bool _jsonEscapeEnabled;
     static bool _timeSynced;
     static Timeval _timeval;
+    static WiFiUDP udp;
 
     static const char *getColorCode(LogLevel level);
     static const char *getResetCode();
@@ -136,7 +138,7 @@ private:
     static void printThreadId();
     static void saveTimeToPrefs(struct tm *timeinfo);
     static void restoreTimeFromPrefs();
-    static void startNTPAsinc();
+    static void startNTPAsync();
 };
 void timeSyncTask(void *param);
 #endif
