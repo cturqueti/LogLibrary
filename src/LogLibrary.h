@@ -87,6 +87,7 @@ public:
     static void enableNewline(bool enable);
     static void showDetails(bool show);        // Controla file/line/function
     static void enableJsonEscape(bool enable); // Esconde detalhes extras
+    static bool isTimeSynced();
 
     static void log(LogLevel level,
                     const __FlashStringHelper *tag,
@@ -94,6 +95,11 @@ public:
                     const char *file,
                     int line,
                     const char *format, ...);
+
+    static bool syncTime(const char *timezone = "UTC",
+                         const char *ntpServer1 = "pool.ntp.org",
+                         const char *ntpServer2 = nullptr,
+                         const char *ntpServer3 = nullptr);
 
 private:
     static Print *_output;
@@ -107,6 +113,7 @@ private:
     static char *_buffer;
     static bool _showDetails;
     static bool _jsonEscapeEnabled;
+    static bool _timeSynced;
 
     static const char *getColorCode(LogLevel level);
     static const char *getResetCode();

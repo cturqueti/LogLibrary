@@ -11,6 +11,7 @@ uint16_t Log::_bufferSize = 256;
 char *Log::_buffer = nullptr;
 bool Log::_showDetails = false;
 bool Log::_jsonEscapeEnabled = false;
+bool Log::_timeSynced = false;
 
 void Log::begin(Print *output, uint16_t bufferSize)
 {
@@ -56,13 +57,18 @@ const char *Log::getResetCode()
 
 void Log::printTimestamp()
 {
-    if (!_timestampEnabled)
+    if (!_timestampEnabled || !_timeSynced)
         return;
 
-    time_t now;
-    time(&now);
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo))
+    {
+        _output->print("[Time Not Synced] ");
+        return;
+    }
+
     char buf[20];
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now));
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
     _output->printf("[%s] ", buf);
 }
 
@@ -163,6 +169,11 @@ void Log::enableJsonEscape(bool enable)
     _jsonEscapeEnabled = enable;
 }
 
+bool Log::isTimeSynced()
+{
+    return _timeSynced;
+}
+
 void Log::log(LogLevel level,
               const __FlashStringHelper *tag,
               const __FlashStringHelper *funcName,
@@ -217,4 +228,22 @@ void Log::log(LogLevel level,
     {
         _output->println();
     }
+}
+
+bool Log::syncTime(const char *timezone,
+                   const char *ntpServer1, const char *ntpServer2,
+                   const char *ntpServer3)
+{
+    configTzTime(timezone, ntpServer1, ntpServer2, ntpServer3);
+
+    // Espera pela sincronização (máximo 10 tentativas)
+    int retry = 0;
+    while (!getLocalTime(nullptr) && retry < 10)
+    {
+        delay(1000);
+        retry++;
+    }
+
+    _timeSynced = (retry < 10);
+    return _timeSynced;
 }
