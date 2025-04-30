@@ -189,7 +189,7 @@ void Log::log(LogLevel level,
         { // Nova flag independente
             _output->printf("[%s:%d][%s]", file, line, funcName);
         }
-
+        _output->print(": ");
         _output->print(_buffer);
         _output->print(getResetCode());
     }
