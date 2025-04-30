@@ -239,10 +239,8 @@ bool Log::syncTime(const char *timezone,
     // Espera pela sincronização (máximo 10 tentativas)
     int retry = 0;
     struct tm timeinfo;
-    while (!getLocalTime(&timeinfo) && retry < 10)
+    while (!getLocalTime(&timeinfo) && retry < 20)
     {
-        delay(500);
-        configTzTime(timezone, ntpServer1, ntpServer2, ntpServer3);
         delay(500);
         retry++;
     }
