@@ -4,6 +4,10 @@
 #include <Arduino.h>
 #include <Print.h>
 #include <stdarg.h>
+#include <time.h>
+#ifdef ESP32
+#include <freertos/task.h>
+#endif
 
 // Macro helpers para verificação em tempo de compilação
 #define LOG_LEVEL_NONE 0
@@ -33,25 +37,25 @@
 
 // Macros condicionais
 #if CURRENT_LOG_LEVEL >= LOG_LEVEL_DEBUG
-#define LOG_DEBUG(format, ...) Log::log(LogLevel::DEBUG, F("DEBUG"), F(__func__), format, ##__VA_ARGS__)
+#define LOG_DEBUG(format, ...) Log::log(LogLevel::DEBUG, F("DEBUG"), F(__func__), __FILE__, __LINE__, format, ##__VA_ARGS__)
 #else
 #define LOG_DEBUG(format, ...)
 #endif
 
 #if CURRENT_LOG_LEVEL >= LOG_LEVEL_INFO
-#define LOG_INFO(format, ...) Log::log(LogLevel::INFO, F("INFO"), F(__func__), format, ##__VA_ARGS__)
+#define LOG_INFO(format, ...) Log::log(LogLevel::INFO, F("INFO"), F(__func__), __FILE__, __LINE__, format, ##__VA_ARGS__)
 #else
 #define LOG_INFO(format, ...)
 #endif
 
 #if CURRENT_LOG_LEVEL >= LOG_LEVEL_WARNING
-#define LOG_WARN(format, ...) Log::log(LogLevel::WARNING, F("WARN"), F(__func__), format, ##__VA_ARGS__)
+#define LOG_WARN(format, ...) Log::log(LogLevel::WARNING, F("WARN"), F(__func__), __FILE__, __LINE__, format, ##__VA_ARGS__)
 #else
 #define LOG_WARN(format, ...)
 #endif
 
 #if CURRENT_LOG_LEVEL >= LOG_LEVEL_ERROR
-#define LOG_ERROR(format, ...) Log::log(LogLevel::ERROR, F("ERROR"), F(__func__), format, ##__VA_ARGS__)
+#define LOG_ERROR(format, ...) Log::log(LogLevel::ERROR, F("ERROR"), F(__func__), __FILE__, __LINE__, format, ##__VA_ARGS__)
 #else
 #define LOG_ERROR(format, ...)
 #endif
@@ -65,25 +69,49 @@ enum class LogLevel : uint8_t
     DEBUG
 };
 
+enum class LogFormat : uint8_t
+{
+    TEXT = 0,
+    JSON
+};
+
 class Log
 {
 public:
     static void begin(Print *output = &Serial, uint16_t bufferSize = 256);
     static void setLogLevel(LogLevel level);
+    static void setFormat(LogFormat format);
     static void enableColors(bool enable);
+    static void enableTimestamp(bool enable);
+    static void enableThreadId(bool enable);
     static void enableNewline(bool enable);
-    static void log(LogLevel level, const __FlashStringHelper *tag, const __FlashStringHelper *funcName, const char *format, ...);
+    static void showDetails(bool show);        // Controla file/line/function
+    static void enableJsonEscape(bool enable); // Esconde detalhes extras
+
+    static void log(LogLevel level,
+                    const __FlashStringHelper *tag,
+                    const __FlashStringHelper *funcName,
+                    const char *file,
+                    int line,
+                    const char *format, ...);
 
 private:
     static Print *_output;
     static LogLevel _currentLevel;
+    static LogFormat _format;
     static bool _colorsEnabled;
+    static bool _timestampEnabled;
+    static bool _threadIdEnabled;
     static bool _newlineEnabled;
     static uint16_t _bufferSize;
     static char *_buffer;
+    static bool _showDetails;
+    static bool _jsonEscapeEnabled;
 
     static const char *getColorCode(LogLevel level);
     static const char *getResetCode();
+    static void printTimestamp();
+    static void printThreadId();
 };
 
 #endif
