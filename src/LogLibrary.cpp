@@ -153,6 +153,16 @@ void Log::enableNewline(bool enable)
     _newlineEnabled = enable;
 }
 
+void Log::showDetails(bool show)
+{
+    _showDetails = show;
+}
+
+void Log::enableJsonEscape(bool enable)
+{
+    _jsonEscapeEnabled = enable;
+}
+
 void Log::log(LogLevel level,
               const __FlashStringHelper *tag,
               const __FlashStringHelper *funcName,
