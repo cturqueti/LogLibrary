@@ -97,10 +97,10 @@ void loop() {
 ```
 
 ## 📊 Saída Exemplo:  
-[DEBUG][1250] Este é um debug  
-[INFO][1251] Informação importante  
-[WARN][1252] Atenção: temperatura alta  
-[ERROR][1253] ERRO: Sensor não respondendo  
+[DEBUG][function][1250] Este é um debug  
+[INFO][function][1251] Informação importante  
+[WARN][function][1252] Atenção: temperatura alta  
+[ERROR][function][1253] ERRO: Sensor não respondendo  
 
 ## 🌍 Compatibilidade:  
 Plataforma	Testado em

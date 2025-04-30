@@ -59,7 +59,7 @@ void Log::enableNewline(bool enable)
     _newlineEnabled = enable;
 }
 
-void Log::log(LogLevel level, const __FlashStringHelper *tag, const char *format, ...)
+void Log::log(LogLevel level, const __FlashStringHelper *tag, const __FlashStringHelper *funcName, const char *format, ...)
 {
     if (level > _currentLevel || !_output || !_buffer)
         return;
@@ -74,6 +74,8 @@ void Log::log(LogLevel level, const __FlashStringHelper *tag, const char *format
     _output->print(getColorCode(level));
     _output->print('[');
     _output->print(tag);
+    _output->print("][");
+    _output->print(funcName);
     _output->print("][");
     _output->print(millis());
     _output->print("] ");

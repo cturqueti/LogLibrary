@@ -16,27 +16,42 @@
 #define CURRENT_LOG_LEVEL LOG_LEVEL_DEBUG
 #endif
 
+//----------- Definição dos pinos para a serial alternativa (RX, TX) -------------------
+#ifndef UART_RX_PIN
+#define UART_RX_PIN 44
+#endif
+
+#ifndef UART_TX_PIN
+#define UART_TX_PIN 43
+#endif
+//--------------------------------------------------------------------------------------
+//---------------------- Velocidades de comunicação serial -----------------------------
+#ifndef MAIN_SERIAL_BAUDRATE
+#define MAIN_SERIAL_BAUDRATE 115200
+#endif
+//--------------------------------------------------------------------------------------
+
 // Macros condicionais
 #if CURRENT_LOG_LEVEL >= LOG_LEVEL_DEBUG
-#define LOG_DEBUG(format, ...) Log::log(LogLevel::DEBUG, F("DEBUG"), format, ##__VA_ARGS__)
+#define LOG_DEBUG(format, ...) Log::log(LogLevel::DEBUG, F("DEBUG"), F(__func__), format, ##__VA_ARGS__)
 #else
 #define LOG_DEBUG(format, ...)
 #endif
 
 #if CURRENT_LOG_LEVEL >= LOG_LEVEL_INFO
-#define LOG_INFO(format, ...) Log::log(LogLevel::INFO, F("INFO"), format, ##__VA_ARGS__)
+#define LOG_INFO(format, ...) Log::log(LogLevel::INFO, F("INFO"), F(__func__), format, ##__VA_ARGS__)
 #else
 #define LOG_INFO(format, ...)
 #endif
 
 #if CURRENT_LOG_LEVEL >= LOG_LEVEL_WARNING
-#define LOG_WARN(format, ...) Log::log(LogLevel::WARNING, F("WARN"), format, ##__VA_ARGS__)
+#define LOG_WARN(format, ...) Log::log(LogLevel::WARNING, F("WARN"), F(__func__), format, ##__VA_ARGS__)
 #else
 #define LOG_WARN(format, ...)
 #endif
 
 #if CURRENT_LOG_LEVEL >= LOG_LEVEL_ERROR
-#define LOG_ERROR(format, ...) Log::log(LogLevel::ERROR, F("ERROR"), format, ##__VA_ARGS__)
+#define LOG_ERROR(format, ...) Log::log(LogLevel::ERROR, F("ERROR"), F(__func__), format, ##__VA_ARGS__)
 #else
 #define LOG_ERROR(format, ...)
 #endif
@@ -57,7 +72,7 @@ public:
     static void setLogLevel(LogLevel level);
     static void enableColors(bool enable);
     static void enableNewline(bool enable);
-    static void log(LogLevel level, const __FlashStringHelper *tag, const char *format, ...);
+    static void log(LogLevel level, const __FlashStringHelper *tag, const __FlashStringHelper *funcName, const char *format, ...);
 
 private:
     static Print *_output;

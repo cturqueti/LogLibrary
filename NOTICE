@@ -17,3 +17,6 @@ Modification History:
 
 2025-04-23 - v1.0.1 - Error handling improvements (by cturqueti)
 - Integrated ErrorLibrary for better error tracking
+
+2025-04-30 - v1.0.2 - Error handling improvements (by cturqueti)
+- Add function name to error messages
