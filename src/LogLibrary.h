@@ -6,7 +6,10 @@
 #include <stdarg.h>
 #include <time.h>
 #ifdef ESP32
+#include <Preferences.h>
+#include <WiFi.h>
 #include <freertos/task.h>
+#include <sys/time.h>
 #endif
 
 // Macro helpers para verificação em tempo de compilação
@@ -78,6 +81,8 @@ enum class LogFormat : uint8_t
 class Log
 {
 public:
+    static Preferences _prefs;
+
     static void begin(Print *output = &Serial, uint16_t bufferSize = 256);
     static void setLogLevel(LogLevel level);
     static void setFormat(LogFormat format);
@@ -119,6 +124,9 @@ private:
     static const char *getResetCode();
     static void printTimestamp();
     static void printThreadId();
+    static void saveTimeToPrefs(struct tm *timeinfo);
+    static void restoreTimeFromPrefs();
+    static void startNTPAsinc();
 };
-
+void timeSyncTask(void *param);
 #endif

@@ -12,6 +12,7 @@ char *Log::_buffer = nullptr;
 bool Log::_showDetails = false;
 bool Log::_jsonEscapeEnabled = false;
 bool Log::_timeSynced = false;
+Preferences Log::_prefs;
 
 void Log::begin(Print *output, uint16_t bufferSize)
 {
@@ -26,6 +27,7 @@ void Log::begin(Print *output, uint16_t bufferSize)
 
 // Configura o timestamp (ESP32)
 #ifdef ESP32
+    restoreTimeFromPrefs();
     configTime(0, 0, "pool.ntp.org"); // Configura NTP (opcional)
 #endif
 }
@@ -78,7 +80,7 @@ void Log::printThreadId()
         return;
 
 #ifdef ESP32
-    _output->printf("[T:%u] ", xTaskGetCurrentTaskHandle());
+    _output->printf("[T:%p] ", xTaskGetCurrentTaskHandle());
 #endif
 }
 
@@ -181,6 +183,7 @@ void Log::log(LogLevel level,
               int line,
               const char *format, ...)
 {
+
     if (level > _currentLevel || !_output || !_buffer)
         return;
 
@@ -245,10 +248,63 @@ bool Log::syncTime(const char *timezone,
         retry++;
     }
 
-    _timeSynced = (retry < 10);
+    _timeSynced = (retry < 20);
     if (_timeSynced)
     {
+        saveTimeToPrefs(&timeinfo);
         LOG_INFO("Hora sincronizada: %02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
     }
     return _timeSynced;
+}
+
+void Log::saveTimeToPrefs(struct tm *timeinfo)
+{
+    time_t t = mktime(timeinfo); // converte struct tm para time_t
+    _prefs.begin("time", false);
+    _prefs.putULong64("lastSync", t);
+    _prefs.end();
+}
+
+void Log::restoreTimeFromPrefs()
+{
+    _prefs.begin("time", true);
+    time_t savedTime = _prefs.getULong64("lastSync", 0);
+    _prefs.end();
+
+    if (savedTime > 0)
+    {
+        struct timeval tv = {.tv_sec = savedTime};
+        settimeofday(&tv, nullptr);
+        LOG_INFO("Hora restaurada da memória: %lu", savedTime);
+    }
+}
+
+void timeSyncTask(void *param)
+{
+    const TickType_t delayTime = pdMS_TO_TICKS(5 * 60 * 1000); // 5 minutos
+    while (true)
+    {
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            Log::syncTime("UTC-3", "pool.ntp.org", "time.nist.gov", "time.google.com");
+        }
+        vTaskDelay(delayTime);
+    }
+}
+
+void Log::startNTPAsinc()
+{
+    // Outras inicializações
+    Log::begin(&Serial);
+
+    // Cria a tarefa de sincronização de horário (com prioridade baixa)
+    xTaskCreatePinnedToCore(
+        timeSyncTask,   // Função da tarefa
+        "TimeSyncTask", // Nome da tarefa
+        4096,           // Stack size
+        nullptr,        // Parâmetro
+        1,              // Prioridade
+        nullptr,        // Handle
+        APP_CPU_NUM     // Core (0 ou 1)
+    );
 }
