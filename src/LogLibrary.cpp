@@ -238,12 +238,17 @@ bool Log::syncTime(const char *timezone,
 
     // Espera pela sincronização (máximo 10 tentativas)
     int retry = 0;
-    while (!getLocalTime(nullptr) && retry < 10)
+    struct tm timeinfo;
+    while (!getLocalTime(&timeinfo) && retry < 10)
     {
         delay(1000);
         retry++;
     }
 
     _timeSynced = (retry < 10);
+    if (_timeSynced)
+    {
+        LOG_INFO("Hora sincronizada: %02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    }
     return _timeSynced;
 }
