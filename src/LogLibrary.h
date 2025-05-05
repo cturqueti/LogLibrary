@@ -7,7 +7,6 @@
 #include <time.h>
 #ifdef ESP32
 #include <NTPSync.h>
-#include <Preferences.h>
 #include <WiFi.h>
 #include <freertos/task.h>
 #include <sys/time.h>
@@ -82,13 +81,10 @@ enum class LogFormat : uint8_t
 class Log
 {
 public:
-    static Preferences _prefs;
+    // static Preferences _prefs;
 
     static void begin(Print *output = &Serial, uint16_t bufferSize = 256);
-    static void setTimeval(const char *timezone,
-                           const char *ntpServer1,
-                           const char *ntpServer2 = nullptr,
-                           const char *ntpServer3 = nullptr);
+
     static void setLogLevel(LogLevel level);
     static void setFormat(LogFormat format);
     static void enableColors(bool enable);
@@ -98,6 +94,7 @@ public:
     static void showDetails(bool show);        // Controla file/line/function
     static void enableJsonEscape(bool enable); // Esconde detalhes extras
     static bool isTimeSynced();
+    static bool isUsingInternalClock();
 
     static void log(LogLevel level,
                     const __FlashStringHelper *tag,
@@ -105,9 +102,6 @@ public:
                     const char *file,
                     int line,
                     const char *format, ...);
-
-    static bool syncTime();
-    static bool syncTimeWithFallback();
 
 private:
     static Print *_output;
@@ -122,10 +116,14 @@ private:
     static bool _showDetails;
     static bool _jsonEscapeEnabled;
     static bool _timeSynced;
+    static uint32_t _bootTime; // Tempo em segundos desde o boot
+    static bool _usingInternalClock;
 
     static const char *getColorCode(LogLevel level);
     static const char *getResetCode();
     static void printThreadId();
     static void printTimestamp();
+    static void updateInternalClock();
+    static time_t getCurrentTime();
 };
 #endif

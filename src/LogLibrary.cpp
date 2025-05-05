@@ -12,7 +12,8 @@ char *Log::_buffer = nullptr;
 bool Log::_showDetails = false;
 bool Log::_jsonEscapeEnabled = false;
 bool Log::_timeSynced = false;
-Preferences Log::_prefs;
+uint32_t Log::_bootTime = 0;
+bool Log::_usingInternalClock = true;
 
 void Log::begin(Print *output, uint16_t bufferSize)
 {
@@ -25,20 +26,58 @@ void Log::begin(Print *output, uint16_t bufferSize)
     }
     _buffer = new char[_bufferSize];
 
-// Configura o timestamp (ESP32)
-#ifdef ESP32
+    // Inicializa o clock interno
+    _bootTime = 0;
+    _usingInternalClock = true;
 
-    // udp.begin(123);
-    // restoreTimeFromPrefs();
+#ifdef ESP32
+    // Configura NTP apenas no ESP32
     NTPSync::setTimeval(
         "America/Sao_Paulo", {"time.cloudflare.com", // Alternativa 1
                               "a.st1.ntp.br",        // Alternativa 2
                               "time.windows.com"}    // Alternativa 3
     );
-    NTPSync::logControl(false);
-    NTPSync::begin(1, 1);
+    NTPSync::logControl(true);
+    NTPSync::begin(5, 5);
+
+    // Tenta sincronizar imediatamente
+    if (NTPSync::syncTime())
+    {
+        _usingInternalClock = false;
+    }
 
 #endif
+}
+
+void Log::updateInternalClock()
+{
+    // Atualiza o tempo interno baseado em millis()
+    static uint32_t lastUpdate = 0;
+    uint32_t now = millis();
+
+    if (now - lastUpdate >= 1000)
+    {
+        _bootTime += (now - lastUpdate) / 1000;
+        lastUpdate = now;
+    }
+}
+
+time_t Log::getCurrentTime()
+{
+#ifdef ESP32
+    if (NTPSync::isTimeSynced())
+    {
+        _usingInternalClock = false;
+    }
+
+    if (!_usingInternalClock && NTPSync::isTimeSynced())
+    {
+        return NTPSync::getLastTimeSync();
+    }
+
+#endif
+    updateInternalClock();
+    return _bootTime;
 }
 
 const char *Log::getColorCode(LogLevel level)
@@ -68,22 +107,35 @@ const char *Log::getResetCode()
 
 void Log::printTimestamp()
 {
-    if (!NTPSync::hasTimeval)
-    {
-        // LOG_WARN("Time not synced");
-        Serial0.println("Dont have time");
-        return;
-    }
-
-    time_t now = time(nullptr);
-
-    // Converter para estrutura tm (formato de tempo local)
+    time_t now = getCurrentTime();
     struct tm timeinfo;
-    localtime_r(&now, &timeinfo);
 
+#ifdef ESP32
+    if (!_usingInternalClock)
+    {
+        localtime_r(&now, &timeinfo);
+    }
+    else
+    {
+        // Para clock interno, começa em 00:00:00
+        gmtime_r(&now, &timeinfo);
+    }
+#else
+    // Para outras plataformas, usa clock interno
+    gmtime_r(&now, &timeinfo);
+#endif
     char buf[20];
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
-    _output->printf("[%s] ", buf);
+
+    if (_usingInternalClock)
+    {
+        strftime(buf, sizeof(buf), " %m-%d %H:%M:%S", &timeinfo);
+        _output->printf("[INT:%s] ", buf); // Indica que é clock interno
+    }
+    else
+    {
+        strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
+        _output->printf("[%s] ", buf);
+    }
 }
 
 void Log::printThreadId()
@@ -186,6 +238,11 @@ void Log::enableJsonEscape(bool enable)
 bool Log::isTimeSynced()
 {
     return _timeSynced;
+}
+
+bool Log::isUsingInternalClock()
+{
+    return _usingInternalClock;
 }
 
 void Log::log(LogLevel level,
