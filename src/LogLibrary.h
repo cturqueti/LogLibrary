@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <time.h>
 #ifdef ESP32
+#include <NTPSync.h>
 #include <Preferences.h>
 #include <WiFi.h>
 #include <freertos/task.h>
@@ -78,14 +79,6 @@ enum class LogFormat : uint8_t
     JSON
 };
 
-struct Timeval
-{
-    const char *time_zone;
-    const char *ntp_server1;
-    const char *ntp_server2;
-    const char *ntp_server3;
-};
-
 class Log
 {
 public:
@@ -129,16 +122,11 @@ private:
     static bool _showDetails;
     static bool _jsonEscapeEnabled;
     static bool _timeSynced;
-    static Timeval _timeval;
     static WiFiUDP udp;
 
     static const char *getColorCode(LogLevel level);
     static const char *getResetCode();
-    static void printTimestamp();
     static void printThreadId();
-    static void saveTimeToPrefs(struct tm *timeinfo);
-    static void restoreTimeFromPrefs();
-    static void startNTPAsync();
+    static void printTimestamp();
 };
-void timeSyncTask(void *param);
 #endif

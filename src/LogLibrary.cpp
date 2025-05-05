@@ -14,11 +14,6 @@ bool Log::_jsonEscapeEnabled = false;
 bool Log::_timeSynced = false;
 Preferences Log::_prefs;
 WiFiUDP Log::udp;
-Timeval Log::_timeval = {
-    .time_zone = "America/Sao_Paulo",
-    .ntp_server1 = "pool.ntp.org",
-    .ntp_server2 = "a.st1.ntp.br",
-    .ntp_server3 = "ntp.cais.rnp.br"};
 
 void Log::begin(Print *output, uint16_t bufferSize)
 {
@@ -36,19 +31,15 @@ void Log::begin(Print *output, uint16_t bufferSize)
 
     // udp.begin(123);
     // restoreTimeFromPrefs();
-    startNTPAsync();
-#endif
-}
+    NTPSync::setTimeval(
+        "America/Sao_Paulo", {"time.cloudflare.com", // Alternativa 1
+                              "a.st1.ntp.br",        // Alternativa 2
+                              "time.windows.com"}    // Alternativa 3
+    );
+    NTPSync::logControl(false);
+    NTPSync::begin(1, 1);
 
-void Log::setTimeval(const char *timezone,
-                     const char *ntpServer1,
-                     const char *ntpServer2,
-                     const char *ntpServer3)
-{
-    _timeval.time_zone = timezone;
-    _timeval.ntp_server1 = ntpServer1;
-    _timeval.ntp_server2 = ntpServer2;
-    _timeval.ntp_server3 = ntpServer3;
+#endif
 }
 
 const char *Log::getColorCode(LogLevel level)
@@ -78,15 +69,18 @@ const char *Log::getResetCode()
 
 void Log::printTimestamp()
 {
-    if (!_timestampEnabled || !_timeSynced)
-        return;
-
-    struct tm timeinfo;
-    if (!getLocalTime(&timeinfo))
+    if (!NTPSync::hasTimeval)
     {
-        _output->print("[Time Not Synced] ");
+        // LOG_WARN("Time not synced");
+        Serial0.println("Dont have time");
         return;
     }
+
+    time_t now = time(nullptr);
+
+    // Converter para estrutura tm (formato de tempo local)
+    struct tm timeinfo;
+    localtime_r(&now, &timeinfo);
 
     char buf[20];
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
@@ -250,165 +244,4 @@ void Log::log(LogLevel level,
     {
         _output->println();
     }
-}
-
-bool Log::syncTime()
-{
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        LOG_ERROR("WiFi desconectado");
-        vTaskDelay(pdMS_TO_TICKS(5000));
-        return false;
-    }
-
-    if (!_timeval.time_zone || !_timeval.ntp_server1)
-    {
-        LOG_ERROR("Timezone ou NTP server não configurado");
-        return false;
-    }
-
-    // Configuração robusta do timezone
-    if (_timeval.ntp_server2 && _timeval.ntp_server3)
-    {
-        configTzTime(_timeval.time_zone, _timeval.ntp_server1, _timeval.ntp_server2, _timeval.ntp_server3);
-    }
-    else if (_timeval.ntp_server2)
-    {
-        configTzTime(_timeval.time_zone, _timeval.ntp_server1, _timeval.ntp_server2);
-    }
-    else
-    {
-        configTzTime(_timeval.time_zone, _timeval.ntp_server1);
-    }
-
-    LOG_DEBUG("Configurando timezone: %s", _timeval.time_zone);
-    int retry = 0;
-    const int maxRetries = 40;
-    struct tm timeinfo;
-
-    LOG_DEBUG("Sincronizando horário...");
-
-    while (!getLocalTime(&timeinfo) && retry < maxRetries)
-    {
-        vTaskDelay(pdMS_TO_TICKS(100));
-        retry++;
-    }
-
-    _timeSynced = (retry < maxRetries);
-    if (_timeSynced)
-    {
-        saveTimeToPrefs(&timeinfo);
-        LOG_DEBUG("Hora sincronizada: %02d:%02d:%02d (%d tentativas)", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, retry);
-    }
-    else
-    {
-        LOG_ERROR("Falha ao sincronizar horário");
-    }
-    return _timeSynced;
-}
-
-bool Log::syncTimeWithFallback()
-{
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        LOG_ERROR("WiFi desconectado");
-        vTaskDelay(pdMS_TO_TICKS(5000));
-        return false;
-    }
-
-    const char *servers[] = {
-        _timeval.ntp_server1,
-        _timeval.ntp_server2,
-        _timeval.ntp_server3};
-
-    for (int i = 0; i < 3; i++)
-    {
-        if (servers[i] == nullptr)
-            continue;
-
-        LOG_INFO("Tentando sincronizar com %s...", servers[i]);
-        configTzTime(_timeval.time_zone, servers[i]);
-
-        struct tm timeinfo;
-        int retry = 0;
-        while (retry < 5 && !getLocalTime(&timeinfo, 100))
-        {
-            vTaskDelay(pdMS_TO_TICKS(200));
-            retry++;
-        }
-
-        if (retry < 5)
-        {
-            time_t now = time(nullptr);
-            LOG_INFO("Sincronizado com %s - Hora atual: %s",
-                     servers[i], ctime(&now));
-            return true;
-        }
-    }
-
-    LOG_ERROR("Todos os servidores NTP falharam");
-    return false;
-}
-
-void Log::saveTimeToPrefs(struct tm *timeinfo)
-{
-    time_t t = mktime(timeinfo); // converte struct tm para time_t
-    _prefs.begin("time", false);
-    _prefs.putULong64("lastSync", t);
-    _prefs.end();
-}
-
-void Log::restoreTimeFromPrefs()
-{
-    _prefs.begin("time", true);
-    time_t savedTime = _prefs.getULong64("lastSync", 0);
-    _prefs.end();
-
-    if (savedTime > 0)
-    {
-        struct timeval tv = {.tv_sec = savedTime};
-        settimeofday(&tv, nullptr);
-
-        // Converte para estrutura tm
-        struct tm *timeinfo = localtime(&savedTime);
-
-        // Buffer para formatação
-        char timeStr[20];
-        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", timeinfo);
-
-        LOG_INFO("Hora restaurada: %s (%lu)", timeStr, savedTime);
-    }
-}
-
-void timeSyncTask(void *param)
-{
-    // const TickType_t delayTime = pdMS_TO_TICKS(5 * 60 * 1000); // 5 minutos
-    const TickType_t delayTime = pdMS_TO_TICKS(5 * 1000); // 5 segundos
-
-    while (true)
-    {
-        if (Log::syncTime())
-        {
-            vTaskDelay(delayTime);
-        }
-    }
-}
-
-void Log::startNTPAsync()
-{
-    // Outras inicializações
-    // Log::begin(&Serial);
-    Log::enableThreadId(true);
-
-    // Cria a tarefa de sincronização de horário (com prioridade baixa)
-    xTaskCreatePinnedToCore(
-        timeSyncTask,   // Função da tarefa
-        "TimeSyncTask", // Nome da tarefa
-        4096,           // Stack size
-        nullptr,        // Parâmetro
-        1,              // Prioridade
-        nullptr,        // Handle
-        0               // Core (0 ou 1)
-    );
-    LOG_INFO("Tarefa de sincronização de horário iniciada");
 }
