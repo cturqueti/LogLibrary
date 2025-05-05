@@ -8,6 +8,7 @@
 #ifdef ESP32
 #include <NTPSync.h>
 #include <WiFi.h>
+#include <esp_netif.h>
 #include <freertos/task.h>
 #include <sys/time.h>
 #endif

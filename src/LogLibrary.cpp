@@ -37,8 +37,8 @@ void Log::begin(Print *output, uint16_t bufferSize)
                               "a.st1.ntp.br",        // Alternativa 2
                               "time.windows.com"}    // Alternativa 3
     );
-    NTPSync::logControl(true);
-    NTPSync::begin(5, 5);
+    NTPSync::logControl(false);
+    NTPSync::begin(1, 1);
 
     // Tenta sincronizar imediatamente
     if (NTPSync::syncTime())
