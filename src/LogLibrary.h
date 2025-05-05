@@ -122,7 +122,6 @@ private:
     static bool _showDetails;
     static bool _jsonEscapeEnabled;
     static bool _timeSynced;
-    static WiFiUDP udp;
 
     static const char *getColorCode(LogLevel level);
     static const char *getResetCode();

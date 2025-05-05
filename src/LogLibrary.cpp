@@ -13,7 +13,6 @@ bool Log::_showDetails = false;
 bool Log::_jsonEscapeEnabled = false;
 bool Log::_timeSynced = false;
 Preferences Log::_prefs;
-WiFiUDP Log::udp;
 
 void Log::begin(Print *output, uint16_t bufferSize)
 {
