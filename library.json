@@ -18,7 +18,10 @@
     "sam",  
     "ststm32"  
   ],
-  "dependencies": {},
+  "dependencies": {
+    "type": "git",
+    "url": "https://github.com/cturqueti/NTPSync.git"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/cturqueti/LogLibrary.git"
