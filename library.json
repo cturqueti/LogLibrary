@@ -18,10 +18,16 @@
     "sam",  
     "ststm32"  
   ],
-  "dependencies": {
-    "type": "git",
-    "url":    "https://github.com/cturqueti/NTPSync.git"
-  },
+"dependencies": [
+    {
+      "name": "ArduinoJson",
+      "version": "*"
+    },
+    {  
+      "type": "git",
+      "url": "https://github.com/cturqueti/NTPSync.git"
+    }
+],
   "repository": {
     "type": "git",
     "url": "https://github.com/cturqueti/LogLibrary.git"

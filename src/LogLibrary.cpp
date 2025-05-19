@@ -146,6 +146,7 @@ void Log::printThreadId()
 #ifdef ESP32
     _output->printf("[T:%p] ", xTaskGetCurrentTaskHandle());
 #endif
+    return;
 }
 
 void escapeJsonString(const char *input, char *output)
@@ -198,6 +199,20 @@ void escapeJsonString(const char *input, char *output)
 void Log::setLogLevel(LogLevel level)
 {
     _currentLevel = level;
+    if (_currentLevel == LogLevel::VERBOSE)
+    {
+        _showDetails = true;
+        _threadIdEnabled = true;
+        _timestampEnabled = true;
+    }
+    else
+    {
+        _showDetails = false;
+        _threadIdEnabled = false;
+        _timestampEnabled = false;
+    }
+
+    return;
 }
 
 void Log::setFormat(LogFormat format)

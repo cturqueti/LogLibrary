@@ -19,9 +19,10 @@
 #define LOG_LEVEL_WARNING 2
 #define LOG_LEVEL_INFO 3
 #define LOG_LEVEL_DEBUG 4
+#define LOG_LEVEL_VERBOSE 5
 
 #ifndef CURRENT_LOG_LEVEL
-#define CURRENT_LOG_LEVEL LOG_LEVEL_DEBUG
+#define CURRENT_LOG_LEVEL LOG_LEVEL_VERBOSE
 #endif
 
 //----------- Definição dos pinos para a serial alternativa (RX, TX) -------------------
@@ -40,6 +41,12 @@
 //--------------------------------------------------------------------------------------
 
 // Macros condicionais
+#if CURRENT_LOG_LEVEL >= LOG_LEVEL_VERBOSE
+#define LOG_VERBOSE(format, ...) Log::log(LogLevel::DEBUG, F("VERBOSE"), F(__func__), __FILE__, __LINE__, format, ##__VA_ARGS__)
+#else
+#define LOG_VERBOSE(format, ...)
+#endif
+
 #if CURRENT_LOG_LEVEL >= LOG_LEVEL_DEBUG
 #define LOG_DEBUG(format, ...) Log::log(LogLevel::DEBUG, F("DEBUG"), F(__func__), __FILE__, __LINE__, format, ##__VA_ARGS__)
 #else
@@ -70,7 +77,8 @@ enum class LogLevel : uint8_t
     ERROR,
     WARNING,
     INFO,
-    DEBUG
+    DEBUG,
+    VERBOSE
 };
 
 enum class LogFormat : uint8_t
