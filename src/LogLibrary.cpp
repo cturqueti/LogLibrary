@@ -17,7 +17,13 @@ bool Log::_usingInternalClock = true;
 
 void Log::begin(Print *output, uint16_t bufferSize)
 {
+#ifdef ESP32
+    // Para ESP32 padrão, sempre usa Serial, independente do parâmetro
+    _output = &Serial;
+#else
+    // Para ESP32-S3 ou outras plataformas, usa o output fornecido ou Serial
     _output = output ? output : &Serial;
+#endif
     _bufferSize = bufferSize;
 
     if (_buffer)
