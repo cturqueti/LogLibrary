@@ -250,6 +250,7 @@ void Log::setManualTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour,
 
     // Converter para time_t e configurar
     now = mktime(&timeinfo);
+    _bootTime = now;
     timeval tv = {.tv_sec = now};
     settimeofday(&tv, NULL);
 }
