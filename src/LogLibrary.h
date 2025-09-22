@@ -91,11 +91,18 @@ class Log
 {
 public:
     // static Preferences _prefs;
+    static Log &getInstance()
+    {
+        static Log _instance;
+        return _instance;
+    }
 
     static void begin(Print *output = &Serial, uint16_t bufferSize = 256);
 
     static void setLogLevel(LogLevel level);
     static void setFormat(LogFormat format);
+    static void setManualTime(uint16_t year = 2025, uint8_t month = 1, uint8_t day = 1, uint8_t hour = 0, uint8_t minute = 0, uint8_t second = 0);
+    static void ntpEnable(bool enable);
     static void enableColors(bool enable);
     static void enableTimestamp(bool enable);
     static void enableThreadId(bool enable);
@@ -125,9 +132,11 @@ private:
     static bool _showDetails;
     static bool _jsonEscapeEnabled;
     static bool _timeSynced;
+    static bool _ntpEnable;
     static uint32_t _bootTime; // Tempo em segundos desde o boot
     static bool _usingInternalClock;
 
+    Log() {};
     static const char *getColorCode(LogLevel level);
     static const char *getResetCode();
     static void printThreadId();

@@ -12,6 +12,7 @@ char *Log::_buffer = nullptr;
 bool Log::_showDetails = false;
 bool Log::_jsonEscapeEnabled = false;
 bool Log::_timeSynced = false;
+bool Log::_ntpEnable = false;
 uint32_t Log::_bootTime = 0;
 bool Log::_usingInternalClock = true;
 
@@ -37,21 +38,22 @@ void Log::begin(Print *output, uint16_t bufferSize)
     _usingInternalClock = true;
 
 #ifdef ESP32
-    // Configura NTP apenas no ESP32
-    NTPSync::setTimeval(
-        "America/Sao_Paulo", {"time.cloudflare.com", // Alternativa 1
-                              "a.st1.ntp.br",        // Alternativa 2
-                              "time.windows.com"}    // Alternativa 3
-    );
-    NTPSync::logControl(false);
-    NTPSync::begin(1, 1);
+    if (_ntpEnable)
+    { // Configura NTP apenas no ESP32
+        NTPSync::setTimeval(
+            "America/Sao_Paulo", {"time.cloudflare.com", // Alternativa 1
+                                  "a.st1.ntp.br",        // Alternativa 2
+                                  "time.windows.com"}    // Alternativa 3
+        );
+        NTPSync::logControl(false);
+        NTPSync::begin(1, 1);
 
-    // Tenta sincronizar imediatamente
-    if (NTPSync::syncTime())
-    {
-        _usingInternalClock = false;
+        // Tenta sincronizar imediatamente
+        if (NTPSync::syncTime())
+        {
+            _usingInternalClock = false;
+        }
     }
-
 #endif
 }
 
@@ -71,14 +73,21 @@ void Log::updateInternalClock()
 time_t Log::getCurrentTime()
 {
 #ifdef ESP32
-    if (NTPSync::isTimeSynced())
+    if (_ntpEnable)
     {
-        _usingInternalClock = false;
-    }
+        if (NTPSync::isTimeSynced())
+        {
+            _usingInternalClock = false;
+        }
 
-    if (!_usingInternalClock && NTPSync::isTimeSynced())
+        if (!_usingInternalClock && NTPSync::isTimeSynced())
+        {
+            return NTPSync::getLastTimeSync();
+        }
+    }
+    else
     {
-        return NTPSync::getLastTimeSync();
+        _usingInternalClock = true;
     }
 
 #endif
@@ -224,6 +233,30 @@ void Log::setLogLevel(LogLevel level)
 void Log::setFormat(LogFormat format)
 {
     _format = format;
+}
+
+void Log::setManualTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second)
+{
+    struct tm timeinfo;
+    time_t now;
+
+    // Configurar data/hora manualmente
+    timeinfo.tm_year = year - 1900; // 2024 - 1900 = 124
+    timeinfo.tm_mon = month - 1;    // Agosto (0-11)
+    timeinfo.tm_mday = day;         // Dia 20
+    timeinfo.tm_hour = hour;        // 14 horas
+    timeinfo.tm_min = minute;       // 30 minutos
+    timeinfo.tm_sec = second;       // 0 segundos
+
+    // Converter para time_t e configurar
+    now = mktime(&timeinfo);
+    timeval tv = {.tv_sec = now};
+    settimeofday(&tv, NULL);
+}
+
+void Log::ntpEnable(bool enable)
+{
+    _ntpEnable = enable;
 }
 
 void Log::enableColors(bool enable)
