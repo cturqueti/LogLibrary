@@ -102,7 +102,10 @@ public:
     static void setLogLevel(LogLevel level);
     static void setFormat(LogFormat format);
     static void setManualTime(uint16_t year = 2025, uint8_t month = 1, uint8_t day = 1, uint8_t hour = 0, uint8_t minute = 0, uint8_t second = 0);
+    static void setManualTime(time_t time);
+
     static void ntpEnable(bool enable);
+
     static void enableColors(bool enable);
     static void enableTimestamp(bool enable);
     static void enableThreadId(bool enable);

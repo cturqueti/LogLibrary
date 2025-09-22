@@ -260,6 +260,23 @@ void Log::ntpEnable(bool enable)
     _ntpEnable = enable;
 }
 
+void Log::setManualTime(time_t time)
+{
+    struct tm timeinfo;
+    time_t now;
+
+    // Converter para time_t e configurar
+    now = time;
+    _bootTime = now;
+    timeval tv = {.tv_sec = now};
+    settimeofday(&tv, NULL);
+}
+
+void Log::ntpEnable(bool enable)
+{
+    _ntpEnable = enable;
+}
+
 void Log::enableColors(bool enable)
 {
     _colorsEnabled = enable;
