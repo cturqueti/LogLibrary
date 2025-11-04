@@ -19,8 +19,8 @@
     "ststm32"  
   ],
   "dependencies": {
-    "type": "git",
-    "url": "https://github.com/cturqueti/NTPSync.git"
+    // "type": "git",
+    // "url": "https://github.com/cturqueti/NTPSync.git"
   },
   "repository": {
     "type": "git",
