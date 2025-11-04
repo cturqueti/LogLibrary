@@ -14,7 +14,7 @@
 #endif
 
 //----------- Definição dos pinos para a serial alternativa (RX, TX)
-//-------------------
+//--------------------
 #ifndef UART_RX_PIN
 #define UART_RX_PIN 44
 #endif
