@@ -1,6 +1,6 @@
 {
   "name": "LogLibrary",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "description": "Biblioteca de logging com níveis de log e suporte a cores ANSI",
   "keywords": ["log", "debug", "serial", "arduino"],
   "authors": [
