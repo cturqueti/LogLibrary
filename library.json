@@ -18,10 +18,6 @@
     "sam",  
     "ststm32"  
   ],
-  "dependencies": {
-    "type": "git",
-    "url":    "https://github.com/cturqueti/NTPSync.git"
-  },
   "license": "Apache-2.0",
   "homepage": "https://github.com/cturqueti/LogLibrary",
   "examples": [
