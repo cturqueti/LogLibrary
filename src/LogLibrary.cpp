@@ -1,23 +1,15 @@
 #include "LogLibrary.h"
 
-Print *Log::_output = &Serial;
-LogLevel Log::_currentLevel = LogLevel::DEBUG;
-LogFormat Log::_format = LogFormat::TEXT;
-bool Log::_colorsEnabled = false;
-bool Log::_timestampEnabled = true;
-bool Log::_threadIdEnabled = true;
-bool Log::_newlineEnabled = true;
-uint16_t Log::_bufferSize = 256;
-char *Log::_buffer = nullptr;
-bool Log::_showDetails = false;
-bool Log::_jsonEscapeEnabled = false;
-bool Log::_timeSynced = false;
-uint32_t Log::_bootTime = 0;
-bool Log::_usingInternalClock = true;
+// DEFINA AS VARIÁVEIS ESTÁTICAS NO INÍCIO DO ARQUIVO
+Print *LogLibrary::_output = &Serial;
+LogLevel LogLibrary::_currentLevel = LogLevel::DEBUG;
+LogFormat LogLibrary::_format = LogFormat::TEXT;
+uint16_t LogLibrary::_bufferSize = 256;
+char *LogLibrary::_buffer = nullptr;
 
-void Log::begin(Print *output, uint16_t bufferSize)
+void LogLibrary::begin(Print *output, uint16_t bufferSize)
 {
-    _output = output ? output : &Serial;
+    _output = &Serial; // Ou use o parâmetro output se preferir
     _bufferSize = bufferSize;
 
     if (_buffer)
@@ -25,130 +17,26 @@ void Log::begin(Print *output, uint16_t bufferSize)
         delete[] _buffer;
     }
     _buffer = new char[_bufferSize];
-
-    // Inicializa o clock interno
-    _bootTime = 0;
-    _usingInternalClock = true;
-
-#ifdef ESP32
-    // Configura NTP apenas no ESP32
-    NTPSync::setTimeval(
-        "America/Sao_Paulo", {"time.cloudflare.com", // Alternativa 1
-                              "a.st1.ntp.br",        // Alternativa 2
-                              "time.windows.com"}    // Alternativa 3
-    );
-    NTPSync::logControl(false);
-    NTPSync::begin(1, 1);
-
-    // Tenta sincronizar imediatamente
-    if (NTPSync::syncTime())
-    {
-        _usingInternalClock = false;
-    }
-
-#endif
 }
 
-void Log::updateInternalClock()
+void LogLibrary::setLogLevel(LogLevel level) { _currentLevel = level; }
+
+void LogLibrary::setFormat(LogFormat format) { _format = format; }
+
+void LogLibrary::printTimestamp()
 {
-    // Atualiza o tempo interno baseado em millis()
-    static uint32_t lastUpdate = 0;
-    uint32_t now = millis();
-
-    if (now - lastUpdate >= 1000)
-    {
-        _bootTime += (now - lastUpdate) / 1000;
-        lastUpdate = now;
-    }
-}
-
-time_t Log::getCurrentTime()
-{
-#ifdef ESP32
-    if (NTPSync::isTimeSynced())
-    {
-        _usingInternalClock = false;
-    }
-
-    if (!_usingInternalClock && NTPSync::isTimeSynced())
-    {
-        return NTPSync::getLastTimeSync();
-    }
-
-#endif
-    updateInternalClock();
-    return _bootTime;
-}
-
-const char *Log::getColorCode(LogLevel level)
-{
-    if (!_colorsEnabled)
-        return "";
-
-    switch (level)
-    {
-    case LogLevel::DEBUG:
-        return "\033[0;32m"; // Verde
-    case LogLevel::INFO:
-        return "\033[0;36m"; // Ciano
-    case LogLevel::WARNING:
-        return "\033[0;33m"; // Amarelo
-    case LogLevel::ERROR:
-        return "\033[0;31m"; // Vermelho
-    default:
-        return "";
-    }
-}
-
-const char *Log::getResetCode()
-{
-    return _colorsEnabled ? "\033[0m" : "";
-}
-
-void Log::printTimestamp()
-{
-    time_t now = getCurrentTime();
+    time_t _now;
     struct tm timeinfo;
 
-#ifdef ESP32
-    if (!_usingInternalClock)
-    {
-        localtime_r(&now, &timeinfo);
-    }
-    else
-    {
-        // Para clock interno, começa em 00:00:00
-        gmtime_r(&now, &timeinfo);
-    }
-#else
-    // Para outras plataformas, usa clock interno
-    gmtime_r(&now, &timeinfo);
-#endif
-    char buf[20];
+    time(&_now);
+    localtime_r(&_now, &timeinfo);
 
-    if (_usingInternalClock)
-    {
-        strftime(buf, sizeof(buf), " %m-%d %H:%M:%S", &timeinfo);
-        _output->printf("[INT:%s] ", buf); // Indica que é clock interno
-    }
-    else
-    {
-        strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
-        _output->printf("[%s] ", buf);
-    }
+    char buf[64];
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
+    _output->printf("[%s] ", buf);
 }
 
-void Log::printThreadId()
-{
-    if (!_threadIdEnabled)
-        return;
-
-#ifdef ESP32
-    _output->printf("[T:%p] ", xTaskGetCurrentTaskHandle());
-#endif
-}
-
-void escapeJsonString(const char *input, char *output)
+static void escapeJsonString(const char *input, char *output)
 {
     while (*input)
     {
@@ -195,62 +83,9 @@ void escapeJsonString(const char *input, char *output)
     }
 }
 
-void Log::setLogLevel(LogLevel level)
-{
-    _currentLevel = level;
-}
-
-void Log::setFormat(LogFormat format)
-{
-    _format = format;
-}
-
-void Log::enableColors(bool enable)
-{
-    _colorsEnabled = enable;
-}
-
-void Log::enableTimestamp(bool enable)
-{
-    _timestampEnabled = enable;
-}
-
-void Log::enableThreadId(bool enable)
-{
-    _threadIdEnabled = enable;
-}
-
-void Log::enableNewline(bool enable)
-{
-    _newlineEnabled = enable;
-}
-
-void Log::showDetails(bool show)
-{
-    _showDetails = show;
-}
-
-void Log::enableJsonEscape(bool enable)
-{
-    _jsonEscapeEnabled = enable;
-}
-
-bool Log::isTimeSynced()
-{
-    return _timeSynced;
-}
-
-bool Log::isUsingInternalClock()
-{
-    return _usingInternalClock;
-}
-
-void Log::log(LogLevel level,
-              const __FlashStringHelper *tag,
-              const __FlashStringHelper *funcName,
-              const char *file,
-              int line,
-              const char *format, ...)
+void LogLibrary::log(LogLevel level, const __FlashStringHelper *tag,
+                     const __FlashStringHelper *funcName, const char *file,
+                     int line, const char *format, ...)
 {
 
     if (level > _currentLevel || !_output || !_buffer)
@@ -263,41 +98,26 @@ void Log::log(LogLevel level,
 
     if (_format == LogFormat::TEXT)
     {
-        _output->print(getColorCode(level));
         printTimestamp();
-        printThreadId();
         _output->printf("[%s]", tag);
-
-        if (_showDetails)
-        { // Nova flag independente
-            _output->printf("[%s:%d][%s]", file, line, funcName);
-        }
+        _output->printf("[%s:%d][%s]", file, line, funcName);
         _output->print(": ");
         _output->print(_buffer);
-        _output->print(getResetCode());
     }
     else
     {
         _output->print("{");
         _output->printf("\"timestamp\":%lu,", millis());
         _output->printf("\"level\":\"%s\",", tag);
+        _output->printf("\"file\":\"%s\",", file);
+        _output->printf("\"line\":%d,", line);
+        _output->printf("\"function\":\"%s\",", funcName);
 
-        if (_showDetails)
-        {
-            _output->printf("\"file\":\"%s\",", file);
-            _output->printf("\"line\":%d,", line);
-            _output->printf("\"function\":\"%s\",", funcName);
-        }
-
-        // Buffer com escape para JSON
         char jsonMsg[_bufferSize];
         escapeJsonString(_buffer, jsonMsg);
         _output->printf("\"message\":\"%s\"", jsonMsg);
         _output->print("}");
     }
 
-    if (_newlineEnabled)
-    {
-        _output->println();
-    }
+    _output->println();
 }
