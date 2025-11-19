@@ -1,5 +1,9 @@
 #pragma once
 #include <Arduino.h>
+#include <WebSocketsServer.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#include <freertos/task.h>
 
 // Macro helpers para verificação em tempo de compilação
 #define LOG_LEVEL_NONE 0
@@ -101,6 +105,13 @@ public:
     static void setLogLevel(LogLevel level);
     static void setFormat(LogFormat format);
 
+    static void setWebSocket(WebSocketsServer *webSocket);
+    static void enableWebSocket(bool enable);
+
+    static void startWebSocketTask();
+    static void stopWebSocketTask();
+    static bool isWebSocketTaskRunning();
+
     // ADICIONE 'static' AQUI ↓
     static void log(LogLevel level, const __FlashStringHelper *tag,
                     const __FlashStringHelper *funcName, const char *file,
@@ -114,8 +125,36 @@ private:
     static uint16_t _bufferSize;
     static char *_buffer;
 
+    static WebSocketsServer *_webSocket;
+    static bool _webSocketEnabled;
+
+    static TaskHandle_t _webSocketTaskHandle;
+    static bool _webSocketTaskRunning;
+    static QueueHandle_t _logQueue;
+    static const int QUEUE_SIZE = 20;
+
+    struct LogMessage
+    {
+        LogLevel level;
+        char tag[16];
+        char funcName[32];
+        char file[32];
+        int line;
+        char message[256];
+    };
+
     LogLibrary() {}; // Construtor privado para singleton
 
-    // ADICIONE 'static' AQUI ↓
     static void printTimestamp();
+
+    static void sendToWebSocket(LogLevel level, const char *tag,
+                                const char *funcName, const char *file,
+                                int line, const char *message);
+
+    static void escapeJsonString(const char *input, char *output);
+    static const char *getTimestampString();
+
+    static void webSocketTask(void *parameter);
+    static void initializeWebServer();
+    static void handleWebSocketClients();
 };
